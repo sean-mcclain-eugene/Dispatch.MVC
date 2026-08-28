@@ -1,0 +1,21 @@
+@model InboxMessage
+@{
+    ViewData["Title"] = Model.Subject;
+}
+
+<article class="letter">
+    <p class="kicker">Message</p>
+    <h1>@Model.Subject</h1>
+    <dl class="headers">
+        <div><dt>From</dt><dd>Dispatch worker <jobs@dispatch.local></dd></div>
+        <div><dt>To</dt><dd>@Model.To</dd></div>
+        <div><dt>Sent</dt><dd>@Model.SentUtc.ToString("u")</dd></div>
+    </dl>
+    <div class="body">
+        @Html.Raw(Model.BodyHtml)
+    </div>
+    <div class="actions">
+        <a class="btn primary" asp-controller="Job" asp-action="Session" asp-route-id="@Model.JobId">Open session</a>
+        <a class="btn" asp-action="Index">Back to Inbox</a>
+    </div>
+</article>

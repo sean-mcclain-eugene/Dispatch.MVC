@@ -1,0 +1,36 @@
+@model IReadOnlyList<InboxMessage>
+@{
+    ViewData["Title"] = "Inbox";
+}
+
+<section class="inbox">
+    <p class="kicker">Inbox</p>
+    <h1>Night-shift notes</h1>
+    <p class="lede">
+        Demo mailbox. <code>IEmailSender</code> files here instead of SMTP so you can open the session link without a mail server.
+    </p>
+
+    @if (Model.Count == 0)
+    {
+        <p class="empty">Nothing filed yet. Start a job, detach it, and wait for the worker to finish.</p>
+    }
+    else
+    {
+        <ul class="mail">
+            @foreach (var m in Model)
+            {
+                <li class="@(m.IsRead ? "read" : "unread")">
+                    <a asp-action="Detail" asp-route-id="@m.Id">
+                        @if (!m.IsRead)
+                        {
+                            <span class="dot" aria-label="Unread"></span>
+                        }
+                        <strong>@m.Subject</strong>
+                        <span>@m.Preview</span>
+                        <time datetime="@m.SentUtc.ToString("o")">@m.SentUtc.ToString("MMM d, HH:mm") UTC</time>
+                    </a>
+                </li>
+            }
+        </ul>
+    }
+</section>

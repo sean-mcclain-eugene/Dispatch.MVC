@@ -1,0 +1,24 @@
+@model JobProgressDto
+@{
+    ViewData["Title"] = "Night shift";
+}
+
+<section class="night">
+    <p class="kicker">Night shift</p>
+    <h1>This run is off the screen.</h1>
+    <p class="lede">
+        <strong>@Model.Title</strong> keeps moving on the hosted worker.
+        You can close this tab. When it finishes we’ll file a note to
+        <strong>@Model.NotifyEmail</strong> with a link to the session.
+    </p>
+    <ul class="facts">
+        <li><span>Job</span> @Model.JobId</li>
+        <li><span>Inbox</span> @Model.NotifyEmail</li>
+        <li><span>State</span> Detached · @Model.Status</li>
+    </ul>
+    <div class="actions">
+        <a class="btn primary" asp-controller="Inbox" asp-action="Index">Open Inbox</a>
+        <a class="btn" asp-action="Session" asp-route-id="@Model.JobId">Peek at the session</a>
+        <a class="btn ghost" asp-controller="Home" asp-action="Index">Start another</a>
+    </div>
+</section>

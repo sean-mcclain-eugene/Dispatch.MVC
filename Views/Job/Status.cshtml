@@ -1,0 +1,38 @@
+@model JobProgressDto
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<section class="run" data-job="@Model.JobId">
+    <p class="kicker">Live</p>
+    <h1>@Model.Title</h1>
+    <p class="lede">The worker is running this outside the HTTP request. Watch the steps, or hand it off if it’s taking too long.</p>
+
+    <div class="status-row">
+        <span id="status-pill" class="pill running">@Model.Status</span>
+        <span id="step-label" class="step-now">@Model.StepLabel</span>
+        <span id="step-count" class="meta">@Model.CurrentStep / @Model.StepCount</span>
+    </div>
+
+    <div class="bar" aria-hidden="true">
+        <span id="bar-fill" style="width: @((Model.Progress * 100).ToString("0"))%"></span>
+    </div>
+
+    <ol id="timeline" class="timeline">
+        @for (var i = 0; i < Model.Steps.Count; i++)
+        {
+            var done = i < Model.CompletedSteps.Count;
+            var current = !done && i == Math.Max(0, Model.CurrentStep - 1);
+            <li class="@(done ? "done" : current ? "current" : "")">@Model.Steps[i]</li>
+        }
+    </ol>
+
+    <form asp-action="Detach" asp-route-id="@Model.JobId" method="post" class="detach">
+        <button type="submit" class="btn">Run in the background</button>
+        <p class="hint">We’ll keep going on the worker and file a note to <strong>@Model.NotifyEmail</strong> when the session is ready.</p>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/status.js" asp-append-version="true"></script>
+}

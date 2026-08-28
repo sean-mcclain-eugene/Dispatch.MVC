@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Dispatch.Mvc</RootNamespace>
+    <AssemblyName>Dispatch.Mvc</AssemblyName>
+    <Description>
+      ASP.NET Core 8 MVC guide for long-running jobs that start in the browser,
+      convert mid-flight to a BackgroundService, and email a session link when done.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="README.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+  </ItemGroup>
+
+</Project>
