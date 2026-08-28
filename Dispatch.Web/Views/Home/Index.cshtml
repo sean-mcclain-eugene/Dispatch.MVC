@@ -1,0 +1,70 @@
+@model StartJobRequest
+@{
+    ViewData["Title"] = "New job";
+    var catalog = (IReadOnlyList<JobKindInfo>)ViewBag.Catalog;
+    var recent = (List<LongRunningJob>)ViewBag.Recent;
+}
+
+<section class="hero">
+    <p class="kicker">Night shift</p>
+    <h1>Start a long job. Keep watching, or hand it to the worker.</h1>
+    <p class="lede">
+    The site only writes a <code>Pending</code> row. <code>Dispatch.Worker</code> (Windows Service) claims it.
+    Closing this tab cancels an attached run. Hand it to night shift if it should outlive the tab.
+    </p>
+</section>
+
+<form asp-controller="Job" asp-action="Start" method="post" class="composer">
+    <div asp-validation-summary="ModelOnly" class="errors"></div>
+
+    <fieldset>
+        <legend>What to run</legend>
+        <div class="kinds">
+            @foreach (var kind in catalog)
+            {
+                var id = $"kind-{kind.Kind}";
+                <label class="kind" for="@id">
+                    <input id="@id" type="radio" asp-for="Kind" value="@kind.Kind" />
+                    <span>
+                        <strong>@kind.Title</strong>
+                        <em>@kind.Blurb</em>
+                        <small>@kind.Steps.Count steps · about @(kind.Steps.Count * kind.StepDelay.TotalSeconds:0) seconds</small>
+                    </span>
+                </label>
+            }
+        </div>
+        <span asp-validation-for="Kind" class="field-error"></span>
+    </fieldset>
+
+    <div class="field">
+        <label asp-for="NotifyEmail">Where to file the night-shift note</label>
+        <input asp-for="NotifyEmail" type="email" placeholder="you@company.com" autocomplete="email" />
+        <p class="hint">Used only if you detach. The demo stores mail in Inbox, not SMTP.</p>
+        <span asp-validation-for="NotifyEmail" class="field-error"></span>
+    </div>
+
+    <button type="submit" class="btn primary">Start job</button>
+</form>
+
+@if (recent.Count > 0)
+{
+    <section class="recent">
+        <h2>Recent sessions</h2>
+        <ul>
+            @foreach (var job in recent)
+            {
+                <li>
+                    <a asp-controller="Job" asp-action="Session" asp-route-id="@job.JobId">
+                        <strong>@job.Title</strong>
+                        <span class="pill @job.Status.ToLowerInvariant()">@job.Status</span>
+                        @if (job.IsDetached)
+                        {
+                            <span class="pill night">Detached</span>
+                        }
+                        <time datetime="@job.CreatedUtc.ToString("o")">@job.CreatedUtc.ToString("MMM d, HH:mm") UTC</time>
+                    </a>
+                </li>
+            }
+        </ul>
+    </section>
+}

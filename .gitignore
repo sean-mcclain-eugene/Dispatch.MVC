@@ -429,3 +429,8 @@ FodyWeavers.xsd
 *.msp
 *.user
 *.suo
+# Dispatch local sqlite
+App_Data/*.db
+App_Data/*.db-*
+*.db-wal
+*.db-shm

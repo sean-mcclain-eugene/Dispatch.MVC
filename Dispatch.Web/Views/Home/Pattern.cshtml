@@ -1,0 +1,73 @@
+@{
+    ViewData["Title"] = "The pattern";
+}
+
+<article class="guide">
+    <p class="kicker">Guide</p>
+    <h1>MVC site + Windows Worker Service</h1>
+    <p class="lede">
+        IIS is a front door, not a batch processor. The web app writes a <code>Pending</code> row
+        and holds a browser lease. <code>Dispatch.Worker</code> claims the row from the shared database
+        and runs it as a Windows Service — outside <code>w3wp</code>.
+    </p>
+
+    <h2>Why leave IIS</h2>
+    <p>
+        A <code>BackgroundService</code> hosted in the web app lives in the app pool.
+        Recycle, idle timeout (20 minutes), deploy, and overlapped recycle all kill it.
+        Closed browsers would also leave orphan loops in <code>w3wp</code> unless you lease them.
+        The fix is not a smarter hosted service. The fix is another process.
+    </p>
+
+    <h2>Solution layout</h2>
+    <table>
+        <thead><tr><th>Project</th><th>Process</th><th>Does</th></tr></thead>
+        <tbody>
+            <tr><td><code>Dispatch.Web</code></td><td>IIS / Kestrel</td><td>Forms, lease/heartbeat, detach, inbox, session. Inserts <code>Pending</code>. Never runs steps.</td></tr>
+            <tr><td><code>Dispatch.Worker</code></td><td>Windows Service</td><td>Claims due rows, runs <code>IJobProcessor</code>, files the email.</td></tr>
+            <tr><td><code>Dispatch.Core</code></td><td>—</td><td>Model, DbContext, processor, claim/lock helpers.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>The flow</h2>
+    <ol class="steps-guide">
+        <li><strong>Start.</strong> MVC writes a row (<code>Pending</code>) and redirects to Status. The HTTP request is done.</li>
+        <li><strong>Claim.</strong> The Windows Service polls, <code>ExecuteUpdate</code>s a lock, and runs the steps.</li>
+        <li><strong>Attached.</strong> Status polls are a heartbeat. Tab close → <code>sendBeacon(/Job/Abandon)</code>. The worker notices and stops.</li>
+        <li><strong>Detach.</strong> <code>IsDetached = true</code>. Lease ignored. Work survives the browser <em>and</em> IIS recycle.</li>
+        <li><strong>Notify.</strong> Worker files Inbox mail with <code>/Job/Session/{id}</code>.</li>
+    </ol>
+
+    <h2>How to run</h2>
+    <p>Visual Studio: set <strong>multiple startup projects</strong> to Dispatch.Web + Dispatch.Worker.</p>
+    <p>CLI (two terminals, repo root):</p>
+    <pre><code>dotnet run --project Dispatch.Web
+dotnet run --project Dispatch.Worker</code></pre>
+    <p>If the worker is down, the site still loads and jobs sit at Queued.</p>
+
+    <h2>Install the Windows Service</h2>
+    <p>Elevated PowerShell, from the repo root:</p>
+    <pre><code>powershell -ExecutionPolicy Bypass -File .\scripts\install-worker.ps1</code></pre>
+    <p>
+        Publish Web to IIS as usual. Point <strong>both</strong> <code>appsettings.json</code> files at the
+        <em>same</em> SQL Server catalog (or the same sqlite file). Relative
+        <code>App_Data/dispatch.db</code> is only for unzip-and-run on one machine.
+    </p>
+
+    <h2>Locks, not channels</h2>
+    <p>
+        There is no in-memory <code>Channel</code>. The table is the queue.
+        <code>LockUntilUtc</code> is the claim. If the service crashes, the lock expires (45s)
+        and the next instance takes the row. That is how you survive a service restart
+        without Hangfire — Hangfire is still the usual next step if you want dashboards and retries.
+    </p>
+
+    <h2>Do not</h2>
+    <ul>
+        <li>Host <code>IJobProcessor</code> in the web app “just for now.” Recycle will surprise you.</li>
+        <li>Inject a <code>BackgroundService</code> into a controller.</li>
+        <li>Let attached jobs outlive the browser — that is how workers fill up with orphan work.</li>
+        <li>Give Web and Worker different connection strings.</li>
+        <li>Call <code>Task.Run</code> from MVC and return.</li>
+    </ul>
+</article>
