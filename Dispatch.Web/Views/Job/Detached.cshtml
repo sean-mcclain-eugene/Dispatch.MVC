@@ -1,0 +1,25 @@
+@model JobProgressDto
+@{
+    ViewData["Title"] = "Night shift";
+}
+
+<section class="night">
+    <p class="kicker">Night shift · detached</p>
+    <h1>This run is off the screen.</h1>
+    <p class="lede">
+        <strong>@Model.Title</strong> is no longer leased to a browser.
+        Close the tab — <code>Dispatch.Worker</code> (Windows Service) keeps going and will file a note to
+        <strong>@Model.NotifyEmail</strong> with a session link.
+        Recycle IIS as you like; this process is not <code>w3wp</code>. See <a asp-controller="Home" asp-action="Pattern">the pattern</a>.
+    </p>
+    <ul class="facts">
+        <li><span>Job</span> @Model.JobId</li>
+        <li><span>Inbox</span> @Model.NotifyEmail</li>
+        <li><span>State</span> Detached · @Model.Status</li>
+    </ul>
+    <div class="actions">
+        <a class="btn primary" asp-controller="Inbox" asp-action="Index">Open Inbox</a>
+        <a class="btn" asp-action="Session" asp-route-id="@Model.JobId">Peek at the session</a>
+        <a class="btn ghost" asp-controller="Home" asp-action="Index">Start another</a>
+    </div>
+</section>

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Dispatch.Worker": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

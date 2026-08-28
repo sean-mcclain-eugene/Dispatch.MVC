@@ -1,113 +1,85 @@
-# Dispatch.Mvc
+# Dispatch — MVC + Windows Worker Service
 
-ASP.NET Core 8 MVC guide for a long-running job that:
+ASP.NET Core 8 guide for long jobs on IIS:
 
-1. Starts from a Razor form
-2. Runs on a `BackgroundService` (the HTTP request is already finished)
-3. Can be **detached mid-job** when it is taking too long
-4. Emails the user a **link to the session** when it completes
+1. **Dispatch.Web** — Razor site. Writes a `Pending` row. Holds a browser lease. Does **not** run the job.
+2. **Dispatch.Worker** — Windows Worker Service. Claims the row from the shared database and runs it **outside `w3wp`**.
+3. **Dispatch.Core** — model, DbContext, processor, lock/claim helpers.
 
-This is the fleshed-out version of the original `LongJobWebApp` demo (broken markup, hosted-service DI, console-only email, LocalDB). Open this folder in Visual Studio or run it with the .NET 8 SDK.
+Detach mid-job emails a session link. Close the tab *without* detach and the worker stops (attached lease).
+
+This is the IIS-safe version of the original `LongJobWebApp` demo.
+
+## Run locally
+
+.NET 8 SDK. Open `Dispatch.sln` and set **multiple startup projects** (Web + Worker), or two terminals:
 
 ```bash
-dotnet run
+dotnet run --project Dispatch.Web
+dotnet run --project Dispatch.Worker
 ```
 
-Then browse to the URL the console prints (launch profile is `http://localhost:5288`).
+Web listens at `http://localhost:5288`. SQLite is created at `App_Data/dispatch.db` (shared by both processes).
 
-SQLite is created at `App_Data/dispatch.db` on first start. No SQL Server.
+If only the site is running, jobs stay **Queued**.
 
 ## Walk the demo
 
-1. Pick a job (sales rollup, extract, index, invoices, inventory).
-2. Enter an email. This is where the night-shift note will be filed — not a login.
-3. **Start job.** You land on a live status page that polls `/Job/Progress/{id}`.
-4. **Run in the background** before it finishes. That is detach.
-5. Open **Inbox**. When the worker completes it files a message with **Open session**.
-6. The session is a capability URL: `/Job/Session/{id}`. Bookmark it; no auth.
+1. Start a job. Status is leased to the tab.
+2. Close the tab → **Abandoned**. Worker stops.
+3. Or **Run in the background** → night shift. Close the tab; Worker keeps going.
+4. Inbox → **Open session** (`/Job/Session/{id}`).
 
-If you never detach, the status page just redirects to the session when the worker finishes. No email.
+## Install on Windows / IIS
 
-## Map of the code
+**Site.** Publish `Dispatch.Web` to IIS (in-process or out-of-process). No special app-pool tricks required for the *jobs* — they are not in the pool.
 
-| File | What to copy |
+**Worker.** Elevated PowerShell from the repo root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-worker.ps1
+```
+
+That publishes to `C:\Services\Dispatch.Worker` and registers `DispatchWorker` as Automatic, with restart-on-crash. Uninstall:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-worker.ps1
+```
+
+**Same database.** Point both `appsettings.json` files at one SQL Server catalog (recommended) or one sqlite file, e.g.
+
+```
+Data Source=C:\ProgramData\Dispatch\dispatch.db;Cache=Shared
+```
+
+The unzip default (`App_Data/dispatch.db`) is rewritten at runtime to the sibling `App_Data` folder of each project. That is fine on a dev box. It is **not** fine when Web lives under `inetpub` and the service lives under `C:\Services` — they would open different files. Use an absolute path or SQL Server in production.
+
+Swap sqlite for SQL Server in both `Program.cs` files (`UseSqlServer`) without touching the claim/processor code.
+
+## What moved out of IIS
+
+| Before (in-process `BackgroundService`) | After |
 |---|---|
-| `Controllers/JobController.cs` | Enqueue + redirect. Never run the job on the request. |
-| `Services/IBackgroundTaskQueue.cs` | `Channel<Guid>` seam. |
-| `Services/QueuedHostedService.cs` | `BackgroundService` that owns the loop. |
-| `Services/JobProcessor.cs` | The work. `ExecuteUpdate` so Detach cannot be overwritten. |
-| `Services/IEmailSender.cs` | Swap this for SendGrid / Graph / SMTP. |
-| `Services/InboxEmailSender.cs` | Demo mailbox so the link is clickable without a mail server. |
-| `Views/Job/Status.cshtml` + `wwwroot/js/status.js` | Live steps. |
-| `Views/Job/Detached.cshtml` | Night shift. |
-| `Views/Job/Session.cshtml` | Results at the emailed URL. |
-| `Views/Home/Pattern.cshtml` | Same guide, in the running app. |
+| `Channel<Guid>` inside `w3wp` | `Pending` / `LockUntilUtc` rows in the database |
+| App pool recycle drops work | Worker is a separate service; expired locks are reclaimed |
+| Idle timeout kills detached jobs | IIS idle timeout does not touch the worker |
+| Closed tab leaked work unless you leased | Lease still exists; Worker honors it |
 
-## Pattern (copy this into another .NET app)
+`IJobProcessor` is unchanged. Only the **host** changed.
 
-**Controller** writes a row, captures the public base URL (the worker has no `HttpContext`), enqueues the id, redirects:
+## Map
 
-```csharp
-_db.Jobs.Add(job);
-await _db.SaveChangesAsync();
-_queue.QueueJob(job.JobId);
-return RedirectToAction(nameof(Status), new { id = job.JobId });
-```
+| Piece | Role |
+|---|---|
+| `Dispatch.Web/Controllers/JobController.cs` | Insert Pending, heartbeat, abandon, detach |
+| `Dispatch.Worker/JobWorker.cs` | Poll + claim loop (`AddWindowsService`) |
+| `Dispatch.Core/Services/JobClaimer.cs` | Optimistic lock via `ExecuteUpdate` |
+| `Dispatch.Core/Services/JobProcessor.cs` | Steps, lease watch, completion email |
+| `scripts/install-worker.ps1` | Publish + `New-Service` |
 
-**Hosted service** dequeues and creates a scope per job (so you get a scoped `DbContext`):
+## Production notes
 
-```csharp
-await using var scope = _scopes.CreateAsyncScope();
-var processor = scope.ServiceProvider.GetRequiredService<IJobProcessor>();
-await processor.RunAsync(jobId, stoppingToken);
-```
-
-**Do not** inject `BackgroundService` into the controller. That was the original DI failure: hosted services are singletons registered by `AddHostedService`, not a thing you new-up per request.
-
-**Detach** is a flag, not a cancel:
-
-```csharp
-job.IsDetached = true;
-await _db.SaveChangesAsync();
-```
-
-The worker always writes progress. After the last step it **re-reads** `IsDetached` and `NotifyEmail`, then sends:
-
-```
-{PublicBaseUrl}/Job/Session/{jobId}
-```
-
-## Bugs that were in the original zip
-
-- `Start.cshtml` — truncated form tag, submit never posted.
-- `Detached.cshtml` / `Completed.cshtml` — broken home links (`/Home/IndexReturn Home`).
-- `JobController` constructed with `BackgroundWorker`, which is a hosted service.
-- Email: `Console.WriteLine` to `{UserName}@yourcompany.com`.
-- Worker held a tracked entity across `Task.Delay` and skipped updates when detached, so Detach could be clobbered and the session had no log.
-- No `_Layout`, no polling, SQL Server LocalDB connection string.
-
-## Production upgrades
-
-- **Queue:** Hangfire, Quartz, Azure Service Bus, RabbitMQ, or a Postgres outbox. Keep “controller enqueues an id.”
-- **Mail:** implement `IEmailSender` with SendGrid, Microsoft Graph, or `SmtpClient`. Leave the Inbox table as an audit log if useful.
-- **Live UI:** SignalR from the processor instead of 700 ms polling.
-- **Store:** `UseSqlServer` / `UseNpgsql` in `Program.cs`. Add real EF migrations instead of `EnsureCreated`.
-- **Auth:** gate `/Job/Session` by owner, and still put a tokenized link in the email.
-- **Multi-instance:** the in-process `Channel` is single-host. Use an external queue before you scale out.
-
-## Layout of a port
-
-```
-HTTP POST  →  Job row + Queue.QueueJob(id)  →  302 Status
-                  │
-                  ▼
-         QueuedHostedService (BackgroundService)
-                  │
-                  ▼
-              IJobProcessor
-                  │
-        ┌─────────┴──────────┐
-        │ still attached      │ detached
-        │ poll → Session      │ Inbox email → Session
-        └─────────────────────┘
-```
+- One worker instance is enough for the demo. Several instances are safe: claim is a single `ExecuteUpdate`.
+- Hangfire + SQL Server is the usual next dashboard/retry layer. Keep “web writes a row, worker runs it.”
+- `IEmailSender` is the mail seam (Inbox table today; SendGrid/Graph/SMTP tomorrow).
+- Attached vs detached is unchanged: only night shift outlives the browser.
