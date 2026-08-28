@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = "Error";
+}
+<section class="panel">
+    <p class="kicker">Fault</p>
+    <h1>Something failed.</h1>
+    <p class="lede">The request did not complete. If this was a job, check the worker logs — the HTTP request and the background run are separate on purpose.</p>
+    @if (ViewBag.RequestId is string id)
+    {
+        <p class="meta">Request @id</p>
+    }
+    <p><a class="btn" asp-controller="Home" asp-action="Index">Back to jobs</a></p>
+</section>

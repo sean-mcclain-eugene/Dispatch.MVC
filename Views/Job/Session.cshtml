@@ -1,0 +1,160 @@
+@model LongRunningJob
+@using System.Text.Json
+@{
+    ViewData["Title"] = Model.Title;
+    var catalog = JobCatalog.Get(Model.Kind);
+    JsonElement result = default;
+    var hasResult = !string.IsNullOrWhiteSpace(Model.ResultJson) &&
+                    JsonSerializer.Deserialize<JsonElement>(Model.ResultJson) is JsonElement el &&
+                    (result = el).ValueKind == JsonValueKind.Object;
+    var completed = new List<string>();
+    try { completed = JsonSerializer.Deserialize<List<string>>(Model.CompletedStepsJson) ?? []; }
+    catch (JsonException) { }
+}
+
+<section class="session">
+    <p class="kicker">Session</p>
+    <h1>@Model.Title</h1>
+    <p class="lede">
+        Capability URL — possession of this id is the key.
+        @if (Model.IsDetached)
+        {
+            <span>Detached from a live view; filed via Inbox.</span>
+        }
+    </p>
+
+    <div class="status-row">
+        <span class="pill @Model.Status.ToLowerInvariant()">@Model.Status</span>
+        @if (Model.IsDetached)
+        {
+            <span class="pill night">Detached</span>
+        }
+        <span class="meta">@Model.JobId</span>
+    </div>
+
+    @if (Model.Status is "Running" or "Pending")
+    {
+        <p class="hint">Still on the worker. Refresh in a few seconds, or wait for the Inbox note.</p>
+        <ol class="timeline">
+            @for (var i = 0; i < catalog.Steps.Count; i++)
+            {
+                bool doneCnt = i < completed.Count;
+                var current = !doneCnt && i == Math.Max(0, Model.CurrentStep - 1);
+                <li class="@(doneCnt ? "done" : current ? "current" : "")">@catalog.Steps[i]</li>
+            }
+        </ol>
+    }
+
+    @if (Model.Status == "Failed")
+    {
+        <p class="errors">@Model.Error</p>
+    }
+
+    @if (hasResult && Model.Status == "Completed")
+    {
+        <article class="report">
+            @switch (Model.Kind)
+            {
+                case "sales":
+                    {
+                        var regions = result.GetProperty("regions");
+                        <h2>Board pack · @result.GetProperty("period").GetString()</h2>
+                        <p class="stat">@result.GetProperty("total").GetInt32().ToString("C0") <small>@result.GetProperty("currency").GetString() · @result.GetProperty("outliersExcluded").GetInt32() outliers excluded</small></p>
+                        <table>
+                            <thead><tr><th>Region</th><th>Revenue</th><th>Orders</th><th>Change</th></tr></thead>
+                            <tbody>
+                            @foreach (var r in regions.EnumerateArray())
+                            {
+                                <tr>
+                                    <td>@r.GetProperty("name").GetString()</td>
+                                    <td>@r.GetProperty("revenue").GetInt32().ToString("C0")</td>
+                                    <td>@r.GetProperty("orders").GetInt32().ToString("N0")</td>
+                                    <td>@r.GetProperty("change").GetDouble().ToString("+0.0%;-0.0%")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                        break;
+                    }
+                case "export":
+                    {
+                        <h2>Signed extract</h2>
+                        <p class="stat">@result.GetProperty("rows").GetInt32().ToString("N0") rows <small>@result.GetProperty("format").GetString() · @result.GetProperty("bytes").GetInt32().ToString("N0") bytes</small></p>
+                        <table>
+                            <thead><tr><th>Account</th><th>Region</th><th>Seats</th><th>Status</th></tr></thead>
+                            <tbody>
+                            @foreach (var r in result.GetProperty("sample").EnumerateArray())
+                            {
+                                <tr>
+                                    <td>@r.GetProperty("account").GetString()</td>
+                                    <td>@r.GetProperty("region").GetString()</td>
+                                    <td>@r.GetProperty("seats").GetInt32()</td>
+                                    <td>@r.GetProperty("status").GetString()</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                        break;
+                    }
+                case "index":
+                    {
+                        <h2>Serving alias · @result.GetProperty("alias").GetString()</h2>
+                        <ul class="facts">
+                            <li><span>Documents</span> @result.GetProperty("documents").GetInt32().ToString("N0")</li>
+                            <li><span>Segments</span> @result.GetProperty("segments").GetInt32()</li>
+                            <li><span>Tokens</span> @result.GetProperty("tokens").GetInt32().ToString("N0")</li>
+                            <li><span>p95</span> @result.GetProperty("p95Ms").GetDouble() ms</li>
+                        </ul>
+                        break;
+                    }
+                case "invoices":
+                    {
+                        <h2>Batch close</h2>
+                        <p class="stat">@result.GetProperty("postedUsd").GetInt32().ToString("C0") posted <small>@result.GetProperty("processed").GetInt32() clean · @result.GetProperty("exceptions").GetInt32() held</small></p>
+                        <table>
+                            <thead><tr><th>Aging</th><th>Count</th><th>Amount</th></tr></thead>
+                            <tbody>
+                            @foreach (var r in result.GetProperty("aging").EnumerateArray())
+                            {
+                                <tr>
+                                    <td>@r.GetProperty("bucket").GetString()</td>
+                                    <td>@r.GetProperty("count").GetInt32()</td>
+                                    <td>@r.GetProperty("amount").GetInt32().ToString("C0")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                        break;
+                    }
+                case "inventory":
+                    {
+                        <h2>Cycle freeze</h2>
+                        <p class="stat">@result.GetProperty("skus").GetInt32().ToString("N0") SKUs <small>shrink @result.GetProperty("shrinkUsd").GetInt32().ToString("C0")</small></p>
+                        <table>
+                            <thead><tr><th>Warehouse</th><th>On hand</th><th>Delta</th><th>Flags</th></tr></thead>
+                            <tbody>
+                            @foreach (var r in result.GetProperty("warehouses").EnumerateArray())
+                            {
+                                <tr>
+                                    <td>@r.GetProperty("name").GetString()</td>
+                                    <td>@r.GetProperty("onHand").GetInt32().ToString("N0")</td>
+                                    <td>@r.GetProperty("delta").GetInt32().ToString("+#;-#;0")</td>
+                                    <td>@r.GetProperty("flags").GetInt32()</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                        break;
+                    }
+            }
+        </article>
+    }
+
+    <p class="meta">
+        Notify @Model.NotifyEmail
+        @if (Model.CompletedUtc is DateTime done)
+        {
+            <span>· completed @done.ToString("u")</span>
+        }
+    </p>
+</section>
