@@ -12,7 +12,7 @@ This is the IIS-safe version of the original `LongJobWebApp` demo.
 
 ## Run locally
 
-.NET 8 SDK. Open `Dispatch.sln` and set **multiple startup projects** (Web + Worker), or two terminals:
+.NET 10 SDK. Open `Dispatch.sln` and set **multiple startup projects** (Web + Worker), or two terminals:
 
 ```bash
 dotnet run --project Dispatch.Web

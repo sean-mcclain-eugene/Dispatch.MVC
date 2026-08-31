@@ -18,7 +18,7 @@
 
   <!-- Debug F5: refresh DispatchWorkerDebug only when worker binaries changed (no UAC otherwise). -->
   <Target Name="SyncDebugWorkerService" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(DesignTimeBuild)' != 'true'">
-    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;@(MSBuildThisFileDirectory)..\scripts\install-worker-debug.ps1&quot;" />
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)..\scripts\install-worker-debug.ps1"" />
   </Target>
 
 </Project>

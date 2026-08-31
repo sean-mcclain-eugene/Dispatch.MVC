@@ -6,20 +6,15 @@
 .DESCRIPTION
   Safe to run from a Visual Studio post-build event.
 
-  1. Publishes to a staging folder (no admin).
+  1. Restores + publishes to a staging folder as the current user (nuget.org).
   2. Compares a stamp of the new exe/dlls to what is already installed.
   3. If nothing changed and the service exists: exits 0 with no UAC.
-  4. If the worker changed or the service is missing: one UAC prompt, then
-     stop → copy → sc create/config → start.
-
-  Do not call New-Service from a nested RunAs. This script elevates itself
-  once (and the parent exits) so sc.exe / New-Service run in the admin process.
+  4. If the worker changed or the service is missing: one UAC prompt. The
+     elevated process only copies staging and calls sc.exe — it does NOT
+     restore NuGet as Administrator (that feed is often VS Offline only).
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File .\scripts\install-worker-debug.ps1
-
-.EXAMPLE
-  .\scripts\install-worker-debug.ps1 -Uninstall
 #>
 [CmdletBinding()]
 param(
@@ -30,7 +25,8 @@ param(
     [string]$ConnectionString = "",
     [switch]$Uninstall,
     [switch]$Force,
-    [switch]$NoStart
+    [switch]$NoStart,
+    [switch]$Apply
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,6 +35,16 @@ function Test-IsAdmin {
     $id = [Security.Principal.WindowsIdentity]::GetCurrent()
     $p = New-Object Security.Principal.WindowsPrincipal($id)
     return $p.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Resolve-Dotnet {
+    $machine = Join-Path $env:ProgramFiles "dotnet\dotnet.exe"
+    $userLocal = Join-Path $env:USERPROFILE ".dotnet\dotnet.exe"
+    $fromPath = Get-Command dotnet -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+    foreach ($c in @($machine, $fromPath, $userLocal)) {
+        if ($c -and (Test-Path $c)) { return $c }
+    }
+    throw "dotnet SDK not found. Install the .NET 10 SDK from https://dot.net (need Program Files\dotnet, not only a user PATH)."
 }
 
 function Get-OutputStamp {
@@ -68,7 +74,20 @@ function Invoke-Sc {
     return @{ Code = $LASTEXITCODE; Text = $out }
 }
 
+function Invoke-Elevate {
+    param([string[]]$ExtraArgs)
+    Write-Host "Elevating (UAC) once..."
+    $argList = @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass",
+        "-File", "`"$PSCommandPath`""
+    ) + $ExtraArgs
+    $p = Start-Process -FilePath "powershell.exe" -Verb RunAs -Wait -PassThru -ArgumentList $argList
+    if ($null -eq $p) { throw "UAC elevation was cancelled." }
+    exit $p.ExitCode
+}
+
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+Set-Location $RepoRoot
 if (-not $InstallDir) {
     $InstallDir = Join-Path $RepoRoot "artifacts\worker-debug"
 }
@@ -77,17 +96,12 @@ $StampPath = Join-Path $InstallDir ".install-stamp"
 $Project = Join-Path $RepoRoot "Dispatch.Worker\Dispatch.Worker.csproj"
 $DbFile = Join-Path $RepoRoot "App_Data\dispatch.db"
 $ExeName = "Dispatch.Worker.exe"
+$NugetOrg = "https://api.nuget.org/v3/index.json"
 
-# --- uninstall (admin) ---
+# --- uninstall (admin only; no restore) ---
 if ($Uninstall) {
     if (-not (Test-IsAdmin)) {
-        Write-Host "Elevating (UAC) to remove $ServiceName..."
-        $p = Start-Process -FilePath "powershell.exe" -Verb RunAs -Wait -PassThru -ArgumentList @(
-            "-NoProfile", "-ExecutionPolicy", "Bypass",
-            "-File", "`"$PSCommandPath`"",
-            "-Uninstall", "-ServiceName", $ServiceName
-        )
-        #exit $p.ExitCode
+        Invoke-Elevate -ExtraArgs @("-Uninstall", "-ServiceName", $ServiceName)
     }
     $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
     if (-not $svc) {
@@ -103,49 +117,59 @@ if ($Uninstall) {
 }
 
 if (-not (Test-Path $Project)) { throw "Worker project not found: $Project" }
-if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-    throw "dotnet SDK not on PATH. Install .NET 8 SDK."
+
+# --- publish as the current user (skip when elevated -Apply) ---
+if (-not $Apply) {
+    $dotnet = Resolve-Dotnet
+    Write-Host "Using $dotnet"
+    & $dotnet --info | Select-String -Pattern "Version:|RID:" | ForEach-Object { Write-Host $_ }
+
+    Write-Host "Restoring + publishing $Configuration -> $StageDir"
+    New-Item -ItemType Directory -Force -Path $StageDir | Out-Null
+    & $dotnet restore $Project --nologo --force --ignore-failed-sources --source $NugetOrg
+    if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed ($LASTEXITCODE). Need nuget.org and the .NET 10 SDK." }
+    & $dotnet publish $Project -c $Configuration -o $StageDir --nologo --no-restore
+    if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed ($LASTEXITCODE)" }
+
+    $stageExe = Join-Path $StageDir $ExeName
+    if (-not (Test-Path $stageExe)) { throw "Expected $stageExe after publish." }
+
+    $newStamp = Get-OutputStamp -Directory $StageDir
+    $oldStamp = Read-Stamp -Path $StampPath
+    $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    $needsInstall = $Force -or -not $svc -or ($newStamp -ne $oldStamp) -or -not (Test-Path (Join-Path $InstallDir $ExeName))
+
+    if (-not $needsInstall) {
+        Write-Host "Worker unchanged (stamp $newStamp). $ServiceName left as $($svc.Status). Skipping UAC."
+        exit 0
+    }
+
+    if (-not (Test-IsAdmin)) {
+        $reason = if (-not $svc) { "service not installed" } else { "worker binaries changed" }
+        Write-Host "Updating debug worker ($reason)."
+        $applyArgs = @(
+            "-Apply",
+            "-ServiceName", $ServiceName,
+            "-Configuration", $Configuration,
+            "-InstallDir", "`"$InstallDir`""
+        )
+        if ($ConnectionString) { $applyArgs += @("-ConnectionString", "`"$ConnectionString`"") }
+        if ($Force) { $applyArgs += "-Force" }
+        if ($NoStart) { $applyArgs += "-NoStart" }
+        Invoke-Elevate -ExtraArgs $applyArgs
+    }
 }
 
-# --- publish to staging (no admin, does not lock the running service exe) ---
-Write-Host "Publishing $Configuration -> $StageDir"
-New-Item -ItemType Directory -Force -Path $StageDir | Out-Null
-& dotnet publish $Project -c $Configuration -o $StageDir --nologo
-if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed ($LASTEXITCODE)" }
+# --- admin: copy staging over the service folder, create/config, start. No NuGet. ---
+if (-not (Test-IsAdmin)) {
+    throw "Service install requires Administrator. Re-run and accept the UAC prompt."
+}
 
 $stageExe = Join-Path $StageDir $ExeName
-if (-not (Test-Path $stageExe)) { throw "Expected $stageExe after publish." }
+if (-not (Test-Path $stageExe)) { throw "Staging output missing: $stageExe. Publish as your user first (do not restore as Administrator)." }
 
 $newStamp = Get-OutputStamp -Directory $StageDir
-$oldStamp = Read-Stamp -Path $StampPath
 $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
-$needsInstall = $Force -or -not $svc -or ($newStamp -ne $oldStamp) -or -not (Test-Path (Join-Path $InstallDir $ExeName))
-
-if (-not $needsInstall) {
-    Write-Host "Worker unchanged (stamp $newStamp). $ServiceName left as $($svc.Status). Skipping UAC."
-    exit 0
-}
-
-# --- one UAC, then THIS process must be the admin one (parent exits) ---
-if (-not (Test-IsAdmin)) {
-    $reason = if (-not $svc) { "service not installed" } else { "worker binaries changed" }
-    Write-Host "Updating debug worker ($reason). Elevating once..."
-    $argList = @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-File", "`"$PSCommandPath`"",
-        "-ServiceName", $ServiceName,
-        "-Configuration", $Configuration,
-        "-InstallDir", "`"$InstallDir`""
-    )
-    if ($ConnectionString) { $argList += @("-ConnectionString", "`"$ConnectionString`"") }
-    if ($Force) { $argList += "-Force" }
-    if ($NoStart) { $argList += "-NoStart" }
-    $p = Start-Process -FilePath "powershell.exe" -Verb RunAs -Wait -PassThru -ArgumentList $argList
-    if ($null -eq $p) { throw "UAC elevation was cancelled." }
-    exit $p.ExitCode
-}
-
-# --- admin: stop, copy staging over the service folder, create/config, start ---
 if ($svc) {
     Write-Host "Stopping $ServiceName"
     $null = Invoke-Sc stop $ServiceName
@@ -186,11 +210,10 @@ $binPath = '"{0}"' -f $exe
 $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if (-not $svc) {
     Write-Host "Creating service $ServiceName (Manual)"
-    # sc.exe requires a space after '='. Quoted binPath handles spaces in the repo path.
     $created = Invoke-Sc create $ServiceName binPath= $binPath start= demand DisplayName= "Dispatch Worker (Debug)"
     if ($created.Code -ne 0) {
         Write-Host $created.Text
-        throw "sc create failed ($($created.Code)). Run this script from an elevated prompt if UAC was skipped."
+        throw "sc create failed ($($created.Code))."
     }
     $null = Invoke-Sc description $ServiceName "Local debug worker. Shares App_Data sqlite with Dispatch.Web. Not the production DispatchWorker service."
 }
@@ -228,11 +251,6 @@ Write-Host "Exe:       $exe"
 Write-Host "Stamp:     $newStamp"
 if ($proc -and $proc -ne 0) {
     Write-Host "PID:       $proc"
-    Write-Host ""
-    Write-Host "Attach the debugger:"
-    Write-Host "  Visual Studio  Debug > Attach to Process > Dispatch.Worker.exe  (PID $proc)"
+    Write-Host "Attach: Visual Studio  Debug > Attach to Process > Dispatch.Worker.exe  (PID $proc)"
 }
-Write-Host ""
-Write-Host "Logs: Event Viewer > Windows Logs > Application"
-Write-Host "Stop: Stop-Service $ServiceName"
 Write-Host "Remove: powershell -ExecutionPolicy Bypass -File `"$PSCommandPath`" -Uninstall"
