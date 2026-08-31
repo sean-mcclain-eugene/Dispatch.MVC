@@ -262,16 +262,54 @@ try {
     Write-Log "wrote $devPath"
 
     $binPath = '"{0}"' -f $exe
+    $displayName = $ServiceName
+
+    $known = @(Get-CimInstance Win32_Service | Where-Object {
+            $_.Name -like '*Dispatch*Worker*' -or
+            $_.DisplayName -like '*Dispatch*Worker*'
+        })
+    foreach ($k in $known) {
+        Write-Log "existing SCM Name=$($k.Name) Display=$($k.DisplayName) State=$($k.State) Path=$($k.PathName)"
+    }
+
+    $leftovers = @(Get-CimInstance Win32_Service | Where-Object {
+            $_.Name -ne $ServiceName -and (
+                $_.Name -eq "Dispatch Worker (Debug)" -or
+                $_.DisplayName -eq "Dispatch Worker (Debug)" -or
+                $_.DisplayName -eq $ServiceName
+            )
+        })
+    foreach ($left in $leftovers) {
+        Write-Log "removing leftover Name=$($left.Name) Display=$($left.DisplayName)"
+        $null = Invoke-Sc stop $left.Name
+        Start-Sleep -Seconds 1
+        $deleted = Invoke-Sc delete $left.Name
+        if ($deleted.Code -ne 0 -and $deleted.Code -ne 1060) {
+            throw "Could not delete leftover '$($left.Name)': $($deleted.Text)"
+        }
+        Start-Sleep -Seconds 2
+    }
+
     $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
     if (-not $svc) {
-        Write-Log "Creating service $ServiceName (Manual) binPath=$binPath"
-        $created = Invoke-Sc create $ServiceName binPath= $binPath start= demand DisplayName= "Dispatch Worker (Debug)"
-        if ($created.Code -ne 0) {
-            throw "sc create failed ($($created.Code)). $($created.Text)"
+        Write-Log "Creating service $ServiceName (Manual) binPath=$binPath DisplayName=$displayName"
+        $createArgs = @(
+            "create", $ServiceName,
+            "binPath=", $binPath,
+            "start=", "demand",
+            "DisplayName=", $displayName
+        )
+        Write-Log "sc.exe $($createArgs -join ' ')"
+        $createOut = & sc.exe @createArgs 2>&1 | Out-String
+        $createCode = $LASTEXITCODE
+        Write-Log "sc create exit=$createCode text=$($createOut.Trim())"
+        if ($createCode -ne 0) {
+            throw "sc create failed ($createCode). $($createOut.Trim())"
         }
         $null = Invoke-Sc description $ServiceName "Local debug worker. Shares App_Data sqlite with Dispatch.Web. Not the production DispatchWorker service."
     }
     else {
+        Write-Log "Service $ServiceName already exists; updating binPath"
         $null = Invoke-Sc config $ServiceName binPath= $binPath start= demand
     }
 
