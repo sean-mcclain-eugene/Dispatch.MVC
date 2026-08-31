@@ -87,7 +87,7 @@ if ($Uninstall) {
             "-File", "`"$PSCommandPath`"",
             "-Uninstall", "-ServiceName", $ServiceName
         )
-        exit $p.ExitCode
+        #exit $p.ExitCode
     }
     $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
     if (-not $svc) {
