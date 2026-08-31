@@ -7,6 +7,11 @@ namespace Dispatch.Core.Services;
 /// <summary>
 /// Database-backed queue. The web app only inserts <c>Pending</c> rows.
 /// The Windows Worker Service claims them here — nothing runs inside IIS.
+///
+/// Every mutation is <c>WHERE JobId = @id</c> (the PK). SQL Server takes a
+/// row lock, not a table lock. Parallel jobs on different guids do not block
+/// each other. Two workers cannot own the same row: <see cref="ExecuteUpdate"/>
+/// returns 0 for the loser.
 /// </summary>
 public static class JobClaimer
 {
@@ -15,14 +20,31 @@ public static class JobClaimer
     /// <summary>Captured as a parameter in ExecuteUpdate (do not inline <c>(DateTime?)null</c>).</summary>
     public static readonly DateTime? Unlocked = null;
 
-    public static async Task<Guid?> TryClaimAsync(AppDbContext db, CancellationToken cancellationToken)
+    public static Task<Guid?> TryClaimAsync(AppDbContext db, CancellationToken cancellationToken) =>
+        TryClaimAsync(db, Array.Empty<Guid>(), cancellationToken);
+
+    public static async Task<Guid?> TryClaimAsync(
+        AppDbContext db,
+        IReadOnlyCollection<Guid> alreadyRunningLocally,
+        CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var candidate = await db.Jobs.AsNoTracking()
+        var skip = alreadyRunningLocally.Count == 0
+            ? Array.Empty<Guid>()
+            : alreadyRunningLocally as Guid[] ?? alreadyRunningLocally.ToArray();
+
+        var query = db.Jobs.AsNoTracking()
             .Where(j =>
                 j.Status == JobStatuses.Pending
                 || (j.Status == JobStatuses.Running
-                    && (j.LockUntilUtc == null || j.LockUntilUtc < now)))
+                    && (j.LockUntilUtc == null || j.LockUntilUtc < now)));
+
+        if (skip.Length > 0)
+        {
+            query = query.Where(j => !skip.Contains(j.JobId));
+        }
+
+        var candidate = await query
             .OrderBy(j => j.CreatedUtc)
             .Select(j => j.JobId)
             .FirstOrDefaultAsync(cancellationToken);

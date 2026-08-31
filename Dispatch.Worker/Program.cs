@@ -19,6 +19,8 @@ builder.Services.AddWindowsService(options =>
     options.ServiceName = "DispatchWorker";
 });
 
+builder.Services.Configure<WorkerOptions>(builder.Configuration.GetSection("Worker"));
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(DispatchPaths.ConnectionString(builder.Configuration, builder.Environment)));
 

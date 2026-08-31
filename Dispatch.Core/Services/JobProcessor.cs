@@ -115,12 +115,10 @@ public sealed class JobProcessor : IJobProcessor
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // Windows Service stop / deploy. Release the lock so the next
-            // worker instance can claim. Do not abandon — the browser may
-            // still be on Status, and detached work must resume.
-            await _db.Jobs.Where(j => j.JobId == jobId && j.Status == JobStatuses.Running)
-                .ExecuteUpdateAsync(s => s.SetProperty(x => x.LockUntilUtc, JobClaimer.Unlocked));
-            _log.LogInformation("Job {JobId} released lock because the worker is stopping.", jobId);
+            // Host stop vs MaxJobDuration is decided by JobWorker so a timeout
+            // becomes Failed (zombie) and a service restart stays resumable.
+            _log.LogInformation("Job {JobId} cancelled.", jobId);
+            throw;
         }
         catch (Exception ex)
         {

@@ -26,7 +26,7 @@ public class LongRunningJob
     /// <summary>
     /// False = leased to the Status tab; close the browser and we abandon.
     /// True = user opted into night shift; the worker keeps going after
-    /// the client is gone (still dies with the IIS app pool unless recovered).
+    /// the client is gone.
     /// </summary>
     public bool IsDetached { get; set; }
 

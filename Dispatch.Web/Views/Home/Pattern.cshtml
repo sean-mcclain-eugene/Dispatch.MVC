@@ -54,7 +54,32 @@ dotnet run --project Dispatch.Worker</code></pre>
         <code>App_Data/dispatch.db</code> is only for unzip-and-run on one machine.
     </p>
 
-    <h2>Locks, not channels</h2>
+    <h2>Parallel jobs (1–5)</h2>
+    <p>
+        Five people can click Start at once. The site only inserts a row keyed by <code>JobId</code> (a guid).
+        The worker runs up to <code>Worker:MaxConcurrentJobs</code> of them at a time (clamped 1–5, default 3).
+        The sixth waits at <code>Pending</code>. There is no <code>Task.Run</code> from MVC and no unbounded thread pool queue.
+    </p>
+    <p>
+        SQL Server is the production store. Every write is <code>WHERE JobId = @id</code> (the primary key),
+        so the engine takes a <strong>row lock</strong>, not a table lock. Parallel jobs do not block each other.
+        Two worker processes cannot own the same row: the claim is one <code>ExecuteUpdate</code>; the loser gets 0 rows.
+    </p>
+    <p>Zombie guards:</p>
+    <ul>
+        <li><code>SemaphoreSlim</code> — never more than five in-flight tasks in this process.</li>
+        <li><code>MaxJobDuration</code> (default 1 hour) — cancel and mark <code>Failed</code> so a stuck loop cannot run forever.</li>
+        <li>In-flight registry — this process will not reclaim an id it is already running.</li>
+        <li><code>LockUntilUtc</code> — a crashed service expires the lock; another instance resumes. A timeout does <em>not</em> resume.</li>
+        <li>Browser lease — attached jobs stop when the tab closes. Detached jobs keep going until complete, timeout, or the service stops.</li>
+    </ul>
+    <p>
+        Tune in the worker <code>appsettings.json</code>:
+    </p>
+    <pre><code>"Worker": {
+  "MaxConcurrentJobs": 3,
+  "MaxJobDuration": "01:00:00"
+}</code></pre>
     <p>
         There is no in-memory <code>Channel</code>. The table is the queue.
         <code>LockUntilUtc</code> is the claim. If the service crashes, the lock expires (45s)

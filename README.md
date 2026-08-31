@@ -56,7 +56,30 @@ The unzip default (`App_Data/dispatch.db`) is rewritten at runtime to the siblin
 
 Swap sqlite for SQL Server in both `Program.cs` files (`UseSqlServer`) without touching the claim/processor code.
 
-## What moved out of IIS
+## Parallel jobs (1–5)
+
+Five clients can Start at once. Each row is a unique `JobId`. The worker runs at most `Worker:MaxConcurrentJobs` (clamped 1–5, default 3). Extra work stays `Pending`.
+
+All SQL is `WHERE JobId = @id`. Production SQL Server takes row locks; jobs do not contend on a table lock. The claim `ExecuteUpdate` is the mutex — two processes cannot run the same guid.
+
+Zombies are bounded:
+
+| Guard | Effect |
+|---|---|
+| `SemaphoreSlim` | No sixth in-flight task |
+| `MaxJobDuration` (default 1h) | Cancel → `Failed`, do not resume |
+| In-flight set | This process will not reclaim its own running ids |
+| `LockUntilUtc` (45s) | Dead process → another instance resumes |
+| Browser lease | Attached job stops when the tab closes |
+
+```json
+"Worker": {
+  "MaxConcurrentJobs": 3,
+  "MaxJobDuration": "01:00:00"
+}
+```
+
+## Locks, not channels
 
 | Before (in-process `BackgroundService`) | After |
 |---|---|
@@ -79,7 +102,7 @@ Swap sqlite for SQL Server in both `Program.cs` files (`UseSqlServer`) without t
 
 ## Production notes
 
-- One worker instance is enough for the demo. Several instances are safe: claim is a single `ExecuteUpdate`.
+- One worker instance with `MaxConcurrentJobs` 1–5 is enough for this demo. Several instances are safe: claim is a single `ExecuteUpdate`.
 - Hangfire + SQL Server is the usual next dashboard/retry layer. Keep “web writes a row, worker runs it.”
 - `IEmailSender` is the mail seam (Inbox table today; SendGrid/Graph/SMTP tomorrow).
 - Attached vs detached is unchanged: only night shift outlives the browser.
