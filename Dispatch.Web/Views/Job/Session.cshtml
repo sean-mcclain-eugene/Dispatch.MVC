@@ -38,9 +38,9 @@
         <ol class="timeline">
             @for (var i = 0; i < catalog.Steps.Count; i++)
             {
-                var done = i < completed.Count;
-                var current = !done && i == Math.Max(0, Model.CurrentStep - 1);
-                <li class="@(done ? "done" : current ? "current" : "")">@catalog.Steps[i]</li>
+                var doneCnt = i < completed.Count;
+                var current = !doneCnt && i == Math.Max(0, Model.CurrentStep - 1);
+                <li class="@(doneCnt ? "done" : current ? "current" : "")">@catalog.Steps[i]</li>
             }
         </ol>
     }

@@ -1,5 +1,6 @@
 using Dispatch.Core.Data;
 using Dispatch.Core.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Dispatch.Core.Services;
 
