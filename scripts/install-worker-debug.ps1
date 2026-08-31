@@ -49,10 +49,10 @@ function Write-Log {
 function Invoke-Logged {
     param(
         [Parameter(Mandatory)][string]$FilePath,
-        [Parameter(ValueFromRemainingArguments)][string[]]$CmdArgs
+        [string[]]$ArgumentList
     )
-    Write-Log "EXEC $FilePath $($CmdArgs -join ' ')"
-    $output = & $FilePath @CmdArgs 2>&1
+    Write-Log "EXEC $FilePath $($ArgumentList -join ' ')"
+    $output = & $FilePath @ArgumentList 2>&1
     $code = $LASTEXITCODE
     foreach ($row in $output) {
         Write-Log ("  " + ($row | Out-String).TrimEnd())
@@ -167,14 +167,18 @@ try {
     if (-not $Apply) {
         $dotnet = Resolve-Dotnet
         Write-Log "Using $dotnet"
-        $null = Invoke-Logged $dotnet "--list-sdks"
-        $null = Invoke-Logged $dotnet "--info"
+        $null = Invoke-Logged -FilePath $dotnet -ArgumentList @("--list-sdks")
+        $null = Invoke-Logged -FilePath $dotnet -ArgumentList @("--info")
 
         Write-Log "Restoring + publishing $Configuration -> $StageDir"
         New-Item -ItemType Directory -Force -Path $StageDir | Out-Null
-        $restore = Invoke-Logged $dotnet restore $Project --nologo --force --ignore-failed-sources --source $NugetOrg
+        $restore = Invoke-Logged -FilePath $dotnet -ArgumentList @(
+            "restore", $Project, "--nologo", "--force", "--ignore-failed-sources", "--source", $NugetOrg
+        )
         if ($restore -ne 0) { throw "dotnet restore failed ($restore). Need nuget.org and the .NET 10 SDK." }
-        $publish = Invoke-Logged $dotnet publish $Project -c $Configuration -o $StageDir --nologo --no-restore
+        $publish = Invoke-Logged -FilePath $dotnet -ArgumentList @(
+            "publish", $Project, "--configuration", $Configuration, "--output", $StageDir, "--nologo", "--no-restore"
+        )
         if ($publish -ne 0) { throw "dotnet publish failed ($publish)" }
 
         $stageExe = Join-Path $StageDir $ExeName
