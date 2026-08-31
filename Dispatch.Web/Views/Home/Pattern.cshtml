@@ -50,6 +50,10 @@ dotnet run --project Dispatch.Worker</code></pre>
     <p>Elevated PowerShell, from the repo root:</p>
     <pre><code>powershell -ExecutionPolicy Bypass -File .\scripts\install-worker.ps1</code></pre>
     <p>
+        Local debugging of the SCM-hosted worker (Debug build, Manual start, shared sqlite):
+    </p>
+    <pre><code>powershell -ExecutionPolicy Bypass -File .\scripts\install-worker-debug.ps1</code></pre>
+    <p>
         Publish Web to IIS as usual. Point <strong>both</strong> <code>appsettings.json</code> files at the
         <em>same</em> SQL Server catalog (or the same sqlite file). Relative
         <code>App_Data/dispatch.db</code> is only for unzip-and-run on one machine.

@@ -6,18 +6,23 @@ namespace Dispatch.Core;
 
 /// <summary>
 /// Web (IIS) and Worker (Windows Service) must open the <em>same</em> database.
-/// Relative <c>../App_Data</c> is the unzip-and-run default. In production
-/// point both appsettings at the same SQL Server catalog instead.
+/// Relative <c>App_Data/dispatch.db</c> is rewritten to the repo sibling folder
+/// (unzip-and-run). An absolute Data Source, or SQL Server, is left alone so a
+/// debug Windows Service can share the web app's sqlite file.
 /// </summary>
 public static class DispatchPaths
 {
     public static string ConnectionString(IConfiguration config, IHostEnvironment env)
     {
         var configured = config.GetConnectionString("DefaultConnection");
-        if (!string.IsNullOrWhiteSpace(configured) &&
-            !configured.Contains("App_Data/dispatch.db", StringComparison.OrdinalIgnoreCase) &&
-            !configured.Contains("App_Data\\dispatch.db", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(configured))
         {
+            configured = "Data Source=App_Data/dispatch.db;Cache=Shared";
+        }
+
+        if (!IsRelativeSqlite(configured))
+        {
+            EnsureSqliteDirectory(configured);
             return configured;
         }
 
@@ -39,5 +44,46 @@ public static class DispatchPaths
         {
             // SQL Server / other providers: the PRAGMA is meaningless.
         }
+    }
+
+    private static bool IsRelativeSqlite(string connectionString)
+    {
+        var path = ReadDataSource(connectionString);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        return !Path.IsPathRooted(path);
+    }
+
+    private static void EnsureSqliteDirectory(string connectionString)
+    {
+        var path = ReadDataSource(connectionString);
+        if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path))
+        {
+            return;
+        }
+
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+    }
+
+    private static string? ReadDataSource(string connectionString)
+    {
+        const string marker = "Data Source=";
+        var i = connectionString.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (i < 0)
+        {
+            return null;
+        }
+
+        var rest = connectionString[(i + marker.Length)..];
+        var end = rest.IndexOf(';');
+        var path = (end < 0 ? rest : rest[..end]).Trim().Trim('"');
+        return path;
     }
 }

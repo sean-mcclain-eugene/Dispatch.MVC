@@ -30,6 +30,22 @@ If only the site is running, jobs stay **Queued**.
 3. Or **Run in the background** → night shift. Close the tab; Worker keeps going.
 4. Inbox → **Open session** (`/Job/Session/{id}`).
 
+## Debug as a local Windows Service
+
+`dotnet run --project Dispatch.Worker` is fine for stepping in Visual Studio. To debug the **service** host (same SCM path as production, including cwd = System32 unless pinned):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-worker-debug.ps1
+```
+
+Self-elevates, publishes **Debug** to `artifacts\worker-debug`, registers **DispatchWorkerDebug** (Manual start, `DOTNET_ENVIRONMENT=Development`), and points it at `App_Data\dispatch.db` so it shares sqlite with `dotnet run --project Dispatch.Web`. Re-run the script after code changes. Attach VS to `Dispatch.Worker.exe`.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-worker-debug.ps1 -Uninstall
+```
+
+Production install remains `install-worker.ps1` (`DispatchWorker`, Automatic, `C:\Services\Dispatch.Worker`).
+
 ## Install on Windows / IIS
 
 **Site.** Publish `Dispatch.Web` to IIS (in-process or out-of-process). No special app-pool tricks required for the *jobs* — they are not in the pool.
@@ -98,7 +114,8 @@ Zombies are bounded:
 | `Dispatch.Worker/JobWorker.cs` | Poll + claim loop (`AddWindowsService`) |
 | `Dispatch.Core/Services/JobClaimer.cs` | Optimistic lock via `ExecuteUpdate` |
 | `Dispatch.Core/Services/JobProcessor.cs` | Steps, lease watch, completion email |
-| `scripts/install-worker.ps1` | Publish + `New-Service` |
+| `scripts/install-worker.ps1` | Publish + `New-Service` (production) |
+| `scripts/install-worker-debug.ps1` | Local Debug service + shared sqlite |
 
 ## Production notes
 
