@@ -16,8 +16,9 @@
     <ProjectReference Include="..\Dispatch.Core\Dispatch.Core.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command=".\scripts\install-worker-debug.ps1" />
+  <!-- Debug F5: refresh DispatchWorkerDebug only when worker binaries changed (no UAC otherwise). -->
+  <Target Name="SyncDebugWorkerService" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)..\scripts\install-worker-debug.ps1"" />
   </Target>
 
 </Project>
