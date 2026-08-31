@@ -53,8 +53,8 @@ if (-not (Test-IsAdmin)) {
         }
     }
     Write-Host "Elevating (UAC) to install the Windows Service..."
-    $p = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $argList -Wait -PassThru
-    exit $p.ExitCode
+    $p = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $argList -Wait -PassThru 
+    #exit $p.ExitCode
 }
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -129,11 +129,14 @@ if ($existing) {
 }
 
 Write-Host "Creating service $ServiceName (Manual, Development)"
-New-Service -Name $ServiceName `
-    -BinaryPathName "`"$exe`"" `
-    -DisplayName "Dispatch Worker (Debug)" `
-    -Description "Local debug worker. Claims Pending rows from the repo sqlite/SQL. Manual start; not the production DispatchWorker service." `
-    -StartupType Manual | Out-Null
+Start-Process powershell.exe -Verb RunAs -ArgumentList '-Command "New-Service -Name ''Dispatch Worker (Debug)'' -BinaryPathName ''$exe''  -Description ''Local debug worker. Claims Pending rows from the repo sqlite/SQL. Manual start; not the production DispatchWorker service.'' -StartupType Manual | Out-Null"'
+
+#New-Service -Name $ServiceName `
+#    -BinaryPathName "`"$exe`"" `
+#    -DisplayName "Dispatch Worker (Debug)" `
+#    -Description "Local debug worker. Claims Pending rows from the repo sqlite/SQL. Manual start; not the production DispatchWorker service." `
+#    -StartupType Manual | Out-Null
+
 
 # .NET Worker reads these at process start. Registry MultiString = one VAR=value per line.
 $svcKey = "HKLM:\SYSTEM\CurrentControlSet\Services\$ServiceName"
