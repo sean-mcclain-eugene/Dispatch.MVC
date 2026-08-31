@@ -7,7 +7,7 @@
     <RootNamespace>Dispatch.Web</RootNamespace>
     <Description>
       IIS / Kestrel front end. Enqueues jobs and holds the attached lease.
-      It does not run the work — Dispatch.Worker does.
+      It does not run the work - Dispatch.Worker does.
     </Description>
   </PropertyGroup>
 
@@ -16,9 +16,12 @@
     <ProjectReference Include="..\Dispatch.Core\Dispatch.Core.csproj" />
   </ItemGroup>
 
-  <!-- Debug F5: refresh DispatchWorkerDebug only when worker binaries changed (no UAC otherwise). -->
+  <!-- Debug F5: refresh DispatchWorkerDebug only when worker binaries changed (no UAC otherwise).
+       WorkingDirectory avoids nested quotes in Command, which made this file invalid XML and
+       Visual Studio refused to load the project. -->
   <Target Name="SyncDebugWorkerService" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(DesignTimeBuild)' != 'true'">
-    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)..\scripts\install-worker-debug.ps1"" />
+    <Exec WorkingDirectory="$(MSBuildThisFileDirectory).."
+          Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-worker-debug.ps1" />
   </Target>
 
 </Project>
