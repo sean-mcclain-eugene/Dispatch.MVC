@@ -434,3 +434,7 @@ App_Data/*.db
 App_Data/*.db-*
 *.db-wal
 *.db-shm
+
+# Local PAT — never commit the real file (example is OK)
+.grok/secrets/github.env
+*.pat
