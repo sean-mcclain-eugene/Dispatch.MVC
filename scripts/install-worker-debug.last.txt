@@ -1,102 +1,137 @@
 ﻿
-2026-08-31 22:06:40Z [INFO] ==== start pid=34568 user=CEDPSMM machine=CEISDLT150 ====
-2026-08-31 22:06:40Z [INFO] admin=False Apply=False Uninstall=False Force=False
-2026-08-31 22:06:40Z [INFO] cwd=C:\Users\cedpsmm\source\self\Dispatch.Mvc
-2026-08-31 22:06:40Z [INFO] script=C:\Users\cedpsmm\source\self\Dispatch.Mvc\scripts\install-worker-debug.ps1
-2026-08-31 22:06:40Z [INFO] repo=C:\Users\cedpsmm\source\self\Dispatch.Mvc
-2026-08-31 22:06:40Z [INFO] ps=5.1.26100.8457 64bit=True
-2026-08-31 22:06:40Z [INFO] bound=
-2026-08-31 22:06:40Z [INFO] InstallDir=C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug StageDir=C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug-stage Project=C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\Dispatch.Worker.csproj
-2026-08-31 22:06:40Z [INFO] dotnet candidates machine=C:\Program Files\dotnet\dotnet.exe path=C:\Program Files\dotnet\dotnet.exe user=C:\Users\cedpsmm\.dotnet\dotnet.exe
-2026-08-31 22:06:40Z [INFO] Using C:\Program Files\dotnet\dotnet.exe
-2026-08-31 22:06:40Z [INFO] EXEC C:\Program Files\dotnet\dotnet.exe --list-sdks
-2026-08-31 22:06:40Z [INFO]   9.0.315 [C:\Program Files\dotnet\sdk]
-2026-08-31 22:06:40Z [INFO]   10.0.300 [C:\Program Files\dotnet\sdk]
-2026-08-31 22:06:40Z [INFO] EXIT 0  (C:\Program Files\dotnet\dotnet.exe)
-2026-08-31 22:06:40Z [INFO] EXEC C:\Program Files\dotnet\dotnet.exe --info
-2026-08-31 22:06:41Z [INFO]   .NET SDK:
-2026-08-31 22:06:41Z [INFO]    Version:           10.0.300
-2026-08-31 22:06:41Z [INFO]    Commit:            caa81fa497
-2026-08-31 22:06:41Z [INFO]    Workload version:  10.0.300-manifests.e0989437
-2026-08-31 22:06:41Z [INFO]    MSBuild version:   18.6.3+caa81fa49
-2026-08-31 22:06:41Z [INFO]   
-2026-08-31 22:06:41Z [INFO]   Runtime Environment:
-2026-08-31 22:06:41Z [INFO]    OS Name:     Windows
-2026-08-31 22:06:41Z [INFO]    OS Version:  10.0.26200
-2026-08-31 22:06:41Z [INFO]    OS Platform: Windows
-2026-08-31 22:06:41Z [INFO]    RID:         win-x64
-2026-08-31 22:06:41Z [INFO]    Base Path:   C:\Program Files\dotnet\sdk\10.0.300\
-2026-08-31 22:06:41Z [INFO]   
-2026-08-31 22:06:41Z [INFO]   .NET workloads installed:
-2026-08-31 22:06:41Z [INFO]   There are no installed workloads to display.
-2026-08-31 22:06:41Z [INFO]   Configured to use workload sets when installing new manifests.
-2026-08-31 22:06:41Z [INFO]   No workload sets are installed. Run "dotnet workload restore" to install a workload set.
-2026-08-31 22:06:41Z [INFO]   
-2026-08-31 22:06:41Z [INFO]   Host:
-2026-08-31 22:06:42Z [INFO]     Version:      10.0.11
-2026-08-31 22:06:42Z [INFO]     Architecture: x64
-2026-08-31 22:06:42Z [INFO]     Commit:       e2f47b0110
-2026-08-31 22:06:42Z [INFO]   
-2026-08-31 22:06:42Z [INFO]   .NET SDKs installed:
-2026-08-31 22:06:42Z [INFO]     9.0.315 [C:\Program Files\dotnet\sdk]
-2026-08-31 22:06:42Z [INFO]     10.0.300 [C:\Program Files\dotnet\sdk]
-2026-08-31 22:06:42Z [INFO]   
-2026-08-31 22:06:42Z [INFO]   .NET runtimes installed:
-2026-08-31 22:06:42Z [INFO]     Microsoft.AspNetCore.App 6.0.36 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.AspNetCore.App 8.0.27 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.AspNetCore.App 8.0.28 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.AspNetCore.App 9.0.16 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.AspNetCore.App 9.0.17 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.AspNetCore.App 10.0.8 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 1.0.16 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 3.1.32 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 6.0.36 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 8.0.27 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 8.0.28 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 8.0.30 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 9.0.16 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 9.0.17 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 10.0.8 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.NETCore.App 10.0.11 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
-2026-08-31 22:06:42Z [INFO]     Microsoft.WindowsDesktop.App 6.0.36 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
-2026-08-31 22:06:43Z [INFO]     Microsoft.WindowsDesktop.App 8.0.27 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
-2026-08-31 22:06:43Z [INFO]     Microsoft.WindowsDesktop.App 8.0.28 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
-2026-08-31 22:06:43Z [INFO]     Microsoft.WindowsDesktop.App 8.0.30 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
-2026-08-31 22:06:43Z [INFO]     Microsoft.WindowsDesktop.App 9.0.16 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
-2026-08-31 22:06:43Z [INFO]     Microsoft.WindowsDesktop.App 9.0.17 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
-2026-08-31 22:06:43Z [INFO]     Microsoft.WindowsDesktop.App 10.0.8 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
-2026-08-31 22:06:43Z [INFO]     Microsoft.WindowsDesktop.App 10.0.11 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
-2026-08-31 22:06:43Z [INFO]   
-2026-08-31 22:06:43Z [INFO]   Other architectures found:
-2026-08-31 22:06:43Z [INFO]     x86   [C:\Program Files (x86)\dotnet]
-2026-08-31 22:06:43Z [INFO]       registered at [HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\x86\InstallLocation]
-2026-08-31 22:06:43Z [INFO]   
-2026-08-31 22:06:43Z [INFO]   Environment variables:
-2026-08-31 22:06:43Z [INFO]     DOTNET_CLI_UI_LANGUAGE                   [en-US]
-2026-08-31 22:06:43Z [INFO]     DOTNET_HOST_PATH                         [C:\Program Files\dotnet\dotnet.exe]
-2026-08-31 22:06:43Z [INFO]   
-2026-08-31 22:06:43Z [INFO]   global.json file:
-2026-08-31 22:06:43Z [INFO]     C:\Users\cedpsmm\source\self\Dispatch.Mvc\global.json
-2026-08-31 22:06:43Z [INFO]   
-2026-08-31 22:06:43Z [INFO]   Learn more:
-2026-08-31 22:06:43Z [INFO]     https://aka.ms/dotnet/info
-2026-08-31 22:06:43Z [INFO]   
-2026-08-31 22:06:43Z [INFO]   Download .NET:
-2026-08-31 22:06:43Z [INFO]     https://aka.ms/dotnet/download
-2026-08-31 22:06:43Z [INFO] EXIT 0  (C:\Program Files\dotnet\dotnet.exe)
-2026-08-31 22:06:43Z [INFO] Restoring + publishing Debug -> C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug-stage
-2026-08-31 22:06:44Z [INFO] EXEC C:\Program Files\dotnet\dotnet.exe restore C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\Dispatch.Worker.csproj --nologo --force --ignore-failed-sources --source https://api.nuget.org/v3/index.json
-2026-08-31 22:06:46Z [INFO]     Determining projects to restore...
-2026-08-31 22:06:46Z [INFO]     Restored C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\Dispatch.Worker.csproj (in 308 ms).
-2026-08-31 22:06:46Z [INFO]     Restored C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Core\Dispatch.Core.csproj (in 308 ms).
-2026-08-31 22:06:46Z [INFO] EXIT 0  (C:\Program Files\dotnet\dotnet.exe)
-2026-08-31 22:06:46Z [ERROR] FAILED Invoke-Logged : Parameter cannot be processed because the parameter name 'o' is ambiguous. Possible matches include: 
--OutVariable -OutBuffer.
-At C:\Users\cedpsmm\source\self\Dispatch.Mvc\scripts\install-worker-debug.ps1:177 char:77
-+ ... = Invoke-Logged $dotnet publish $Project -c $Configuration -o $StageD ...
-+                                                                ~~
-    + CategoryInfo          : InvalidArgument: (:) [Invoke-Logged], ParameterBindingException
-    + FullyQualifiedErrorId : AmbiguousParameter,Invoke-Logged
+2026-08-31 22:08:25Z [INFO] ==== start pid=29340 user=CEDPSMM machine=CEISDLT150 ====
+2026-08-31 22:08:25Z [INFO] admin=False Apply=False Uninstall=False Force=False
+2026-08-31 22:08:25Z [INFO] cwd=C:\Users\cedpsmm\source\self\Dispatch.Mvc
+2026-08-31 22:08:25Z [INFO] script=C:\Users\cedpsmm\source\self\Dispatch.Mvc\scripts\install-worker-debug.ps1
+2026-08-31 22:08:25Z [INFO] repo=C:\Users\cedpsmm\source\self\Dispatch.Mvc
+2026-08-31 22:08:25Z [INFO] ps=5.1.26100.8457 64bit=True
+2026-08-31 22:08:26Z [INFO] bound=
+2026-08-31 22:08:26Z [INFO] InstallDir=C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug StageDir=C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug-stage Project=C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\Dispatch.Worker.csproj
+2026-08-31 22:08:26Z [INFO] dotnet candidates machine=C:\Program Files\dotnet\dotnet.exe path=C:\Program Files\dotnet\dotnet.exe user=C:\Users\cedpsmm\.dotnet\dotnet.exe
+2026-08-31 22:08:26Z [INFO] Using C:\Program Files\dotnet\dotnet.exe
+2026-08-31 22:08:26Z [INFO] EXEC C:\Program Files\dotnet\dotnet.exe --list-sdks
+2026-08-31 22:08:26Z [INFO]   9.0.315 [C:\Program Files\dotnet\sdk]
+2026-08-31 22:08:26Z [INFO]   10.0.300 [C:\Program Files\dotnet\sdk]
+2026-08-31 22:08:26Z [INFO] EXIT 0  (C:\Program Files\dotnet\dotnet.exe)
+2026-08-31 22:08:26Z [INFO] EXEC C:\Program Files\dotnet\dotnet.exe --info
+2026-08-31 22:08:26Z [INFO]   .NET SDK:
+2026-08-31 22:08:26Z [INFO]    Version:           10.0.300
+2026-08-31 22:08:26Z [INFO]    Commit:            caa81fa497
+2026-08-31 22:08:26Z [INFO]    Workload version:  10.0.300-manifests.e0989437
+2026-08-31 22:08:26Z [INFO]    MSBuild version:   18.6.3+caa81fa49
+2026-08-31 22:08:26Z [INFO]   
+2026-08-31 22:08:26Z [INFO]   Runtime Environment:
+2026-08-31 22:08:27Z [INFO]    OS Name:     Windows
+2026-08-31 22:08:27Z [INFO]    OS Version:  10.0.26200
+2026-08-31 22:08:27Z [INFO]    OS Platform: Windows
+2026-08-31 22:08:27Z [INFO]    RID:         win-x64
+2026-08-31 22:08:27Z [INFO]    Base Path:   C:\Program Files\dotnet\sdk\10.0.300\
+2026-08-31 22:08:27Z [INFO]   
+2026-08-31 22:08:27Z [INFO]   .NET workloads installed:
+2026-08-31 22:08:27Z [INFO]   There are no installed workloads to display.
+2026-08-31 22:08:27Z [INFO]   Configured to use workload sets when installing new manifests.
+2026-08-31 22:08:27Z [INFO]   No workload sets are installed. Run "dotnet workload restore" to install a workload set.
+2026-08-31 22:08:27Z [INFO]   
+2026-08-31 22:08:27Z [INFO]   Host:
+2026-08-31 22:08:27Z [INFO]     Version:      10.0.11
+2026-08-31 22:08:27Z [INFO]     Architecture: x64
+2026-08-31 22:08:27Z [INFO]     Commit:       e2f47b0110
+2026-08-31 22:08:27Z [INFO]   
+2026-08-31 22:08:27Z [INFO]   .NET SDKs installed:
+2026-08-31 22:08:27Z [INFO]     9.0.315 [C:\Program Files\dotnet\sdk]
+2026-08-31 22:08:27Z [INFO]     10.0.300 [C:\Program Files\dotnet\sdk]
+2026-08-31 22:08:27Z [INFO]   
+2026-08-31 22:08:27Z [INFO]   .NET runtimes installed:
+2026-08-31 22:08:27Z [INFO]     Microsoft.AspNetCore.App 6.0.36 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+2026-08-31 22:08:27Z [INFO]     Microsoft.AspNetCore.App 8.0.27 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+2026-08-31 22:08:27Z [INFO]     Microsoft.AspNetCore.App 8.0.28 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.AspNetCore.App 9.0.16 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.AspNetCore.App 9.0.17 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.AspNetCore.App 10.0.8 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 1.0.16 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 3.1.32 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 6.0.36 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 8.0.27 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 8.0.28 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 8.0.30 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 9.0.16 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 9.0.17 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 10.0.8 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.NETCore.App 10.0.11 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.WindowsDesktop.App 6.0.36 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.WindowsDesktop.App 8.0.27 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.WindowsDesktop.App 8.0.28 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.WindowsDesktop.App 8.0.30 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.WindowsDesktop.App 9.0.16 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.WindowsDesktop.App 9.0.17 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.WindowsDesktop.App 10.0.8 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+2026-08-31 22:08:28Z [INFO]     Microsoft.WindowsDesktop.App 10.0.11 [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+2026-08-31 22:08:28Z [INFO]   
+2026-08-31 22:08:28Z [INFO]   Other architectures found:
+2026-08-31 22:08:28Z [INFO]     x86   [C:\Program Files (x86)\dotnet]
+2026-08-31 22:08:28Z [INFO]       registered at [HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\x86\InstallLocation]
+2026-08-31 22:08:29Z [INFO]   
+2026-08-31 22:08:29Z [INFO]   Environment variables:
+2026-08-31 22:08:29Z [INFO]     DOTNET_CLI_UI_LANGUAGE                   [en-US]
+2026-08-31 22:08:29Z [INFO]     DOTNET_HOST_PATH                         [C:\Program Files\dotnet\dotnet.exe]
+2026-08-31 22:08:29Z [INFO]   
+2026-08-31 22:08:29Z [INFO]   global.json file:
+2026-08-31 22:08:29Z [INFO]     C:\Users\cedpsmm\source\self\Dispatch.Mvc\global.json
+2026-08-31 22:08:29Z [INFO]   
+2026-08-31 22:08:29Z [INFO]   Learn more:
+2026-08-31 22:08:29Z [INFO]     https://aka.ms/dotnet/info
+2026-08-31 22:08:29Z [INFO]   
+2026-08-31 22:08:29Z [INFO]   Download .NET:
+2026-08-31 22:08:29Z [INFO]     https://aka.ms/dotnet/download
+2026-08-31 22:08:29Z [INFO] EXIT 0  (C:\Program Files\dotnet\dotnet.exe)
+2026-08-31 22:08:29Z [INFO] Restoring + publishing Debug -> C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug-stage
+2026-08-31 22:08:29Z [INFO] EXEC C:\Program Files\dotnet\dotnet.exe restore C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\Dispatch.Worker.csproj --nologo --force --ignore-failed-sources --source https://api.nuget.org/v3/index.json
+2026-08-31 22:08:32Z [INFO]     Determining projects to restore...
+2026-08-31 22:08:32Z [INFO]     Restored C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\Dispatch.Worker.csproj (in 299 ms).
+2026-08-31 22:08:32Z [INFO]     Restored C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Core\Dispatch.Core.csproj (in 299 ms).
+2026-08-31 22:08:32Z [INFO] EXIT 0  (C:\Program Files\dotnet\dotnet.exe)
+2026-08-31 22:08:32Z [INFO] EXEC C:\Program Files\dotnet\dotnet.exe publish C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\Dispatch.Worker.csproj --configuration Debug --output C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug-stage --nologo --no-restore
+2026-08-31 22:08:35Z [INFO]     Dispatch.Core -> C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Core\bin\Debug\net10.0\Dispatch.Core.dll
+2026-08-31 22:08:35Z [INFO]     Dispatch.Worker -> C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\bin\Debug\net10.0\Dispatch.Worker.dll
+2026-08-31 22:08:35Z [INFO]     Dispatch.Worker -> C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug-stage\
+2026-08-31 22:08:35Z [INFO] EXIT 0  (C:\Program Files\dotnet\dotnet.exe)
+2026-08-31 22:08:36Z [INFO] stamp new=3A4AD92CFC5102AF3329F0C355AB37D3718B9501D92938B127E6584DF934501F-133E980D1ACAAEC12374CDAC5F8BA90F1566A4B0B8D0A93DF7306A4BBE068A41-37B0D5AF964BC950CBD1D7A0DF2F30C70634F5ED3575D5D8AD403B1D246FCC27 old= svc=
+2026-08-31 22:08:36Z [INFO] needsInstall=True
+2026-08-31 22:08:36Z [INFO] Updating debug worker (service not installed).
+2026-08-31 22:08:36Z [INFO] Elevating (UAC) once... extra=-Apply -ServiceName DispatchWorkerDebug -Configuration Debug -InstallDir "C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug"
+2026-08-31 22:08:43Z [INFO] ==== start pid=23796 user=ADM-CEDPSMM machine=CEISDLT150 ====
+2026-08-31 22:08:43Z [INFO] admin=True Apply=True Uninstall=False Force=False
+2026-08-31 22:08:43Z [INFO] cwd=C:\WINDOWS\system32
+2026-08-31 22:08:43Z [INFO] script=C:\Users\cedpsmm\source\self\Dispatch.Mvc\scripts\install-worker-debug.ps1
+2026-08-31 22:08:43Z [INFO] repo=C:\Users\cedpsmm\source\self\Dispatch.Mvc
+2026-08-31 22:08:43Z [INFO] ps=5.1.26100.8457 64bit=True
+2026-08-31 22:08:44Z [INFO] bound=Apply,ServiceName,Configuration,InstallDir
+2026-08-31 22:08:44Z [INFO] InstallDir=C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug StageDir=C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug-stage Project=C:\Users\cedpsmm\source\self\Dispatch.Mvc\Dispatch.Worker\Dispatch.Worker.csproj
+2026-08-31 22:08:44Z [INFO] robocopy C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug-stage -> C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug
+2026-08-31 22:08:44Z [INFO] robocopy exit=1 (0-7 is success)
+2026-08-31 22:08:44Z [INFO] wrote C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug\appsettings.Development.json
+2026-08-31 22:08:44Z [INFO] Creating service DispatchWorkerDebug (Manual) binPath="C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug\Dispatch.Worker.exe"
+2026-08-31 22:08:44Z [INFO] sc.exe create DispatchWorkerDebug binPath= "C:\Users\cedpsmm\source\self\Dispatch.Mvc\artifacts\worker-debug\Dispatch.Worker.exe" start= demand DisplayName= Dispatch Worker (Debug)
+2026-08-31 22:08:44Z [INFO] sc exit=1078 text=[SC] CreateService FAILED 1078:
+
+The name is already in use as either a service name or a service display name.
+2026-08-31 22:08:44Z [ERROR] FAILED sc create failed (1078). [SC] CreateService FAILED 1078:
+
+The name is already in use as either a service name or a service display name.
+
+
+At C:\Users\cedpsmm\source\self\Dispatch.Mvc\scripts\install-worker-debug.ps1:270 char:13
++             throw "sc create failed ($($created.Code)). $($created.Te ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (sc create faile...splay name.
+
+:String) [], RuntimeException
+    + FullyQualifiedErrorId : sc create failed (1078). [SC] CreateService FAILED 1078:
+
+The name is already in use as either a service name or a service display name.
+
+
  
 
-2026-08-31 22:06:46Z [ERROR] STACK at <ScriptBlock>, C:\Users\cedpsmm\source\self\Dispatch.Mvc\scripts\install-worker-debug.ps1: line 177
+2026-08-31 22:08:44Z [ERROR] STACK at <ScriptBlock>, C:\Users\cedpsmm\source\self\Dispatch.Mvc\scripts\install-worker-debug.ps1: line 270
+2026-08-31 22:08:45Z [INFO] elevated child exit=1
