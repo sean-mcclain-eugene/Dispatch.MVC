@@ -40,7 +40,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-worker-debug.ps1
 
 Self-elevates **only when the worker binaries changed or the service is missing**. Unchanged F5/build skips UAC. Publishes **Debug** to a staging folder first so a running service does not lock the copy. Registers **DispatchWorkerDebug** (Manual start, `DOTNET_ENVIRONMENT=Development`) at `artifacts\worker-debug`, sharing `App_Data\dispatch.db` with `dotnet run --project Dispatch.Web`. Attach VS to `Dispatch.Worker.exe`.
 
-Dispatch.Web’s Debug post-build runs this script automatically.
+Dispatch.Web’s Debug post-build runs this script automatically. On failure (exit 1) commit `scripts/install-worker-debug.last.txt`.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\install-worker-debug.ps1 -Uninstall

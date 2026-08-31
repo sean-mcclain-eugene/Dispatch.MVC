@@ -1,0 +1,2 @@
+# Overwritten on each user-mode run of install-worker-debug.ps1 (elevated -Apply appends).
+# If the Web post-build exits 1, commit this file so the failure can be diagnosed.
